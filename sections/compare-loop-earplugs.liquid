@@ -1,0 +1,226 @@
+<section class="comparison-loop-{{section.id}}">
+  <header class="header-{{section.id}}">
+    {% for block in section.blocks %}
+      <div class="product-{{block.id}}">
+        <p class="product-title">{{ block.settings.product.title }}</p>
+        <p class="product-price">€{{ block.settings.product.price | times: 0.01 }}</p>
+        <a class="product-link" href="{{block.settings.product.url}}">Buy now →</a>
+      </div>
+    {% endfor %}
+  </header>
+  <main class="slider-main-{{section.id}}" data-ref="slider-main-component">
+    {% for block in section.blocks %}
+      <div class="product-slider-{{block.id}}">
+        <div class="product-slider-color">
+          <ul class="slider-component-{{block.id}}">
+            {% for variant in block.settings.product.variants %}
+              <li class="slide-component-{{block.id}} slide-image">
+                <img src="{{ variant.featured_image | img_url: 'master'}}" alt="{{ variant.title }}">
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+        <div
+          class="product-variant-color"
+          style="--widthA : calc(24 * {{ block.settings.product.variants | size}}px);"
+        >
+          {%- for option in block.settings.product.options_with_values -%}
+            {%- for value in option.values -%}
+              <input
+                type="radio"
+                id="{{ section.id }}-{{ option.position }}-{{ forloop.index0 }}-{{ block.settings.product.title}}"
+                name="{{ option.name }}"
+                value="{{ value | escape }}"
+                form="{{ product_form_id }}"
+                {% if option.selected_value == value %}
+                  checked
+                {% endif %}
+              >
+              {% assign value_slug = value | downcase | replace: ' ', '-' %}
+              {% if shop.metaobjects.color_swatches[value_slug] %}
+                <label
+                  for="{{ section.id }}-{{ option.position }}-{{ forloop.index0 }}-{{ block.settings.product.title}}"
+                  class="v-swatch"
+                  style="background-image: url({{ shop.metaobjects.color_swatches[value_slug].image | img_url: '50x' }}); background-color: {{ shop.metaobjects.color_swatches[value_slug].color }};"
+                >
+                </label>
+              {% else %}
+                <label for="{{ section.id }}-{{ option.position }}-{{ forloop.index0 }}">
+                  {{ value }}
+                </label>
+              {% endif %}
+            {%- endfor -%}
+          {%- endfor -%}
+        </div>
+      </div>
+    {% endfor %}
+  </main>
+</section>
+
+{% schema %}
+{
+  "name": "Compare Loop Earplugs",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "range",
+      "id": "column_number",
+      "min": 1,
+      "max": 5,
+      "step": 1,
+      "unit": "col",
+      "label": "Number of Columns",
+      "default": 3
+    }
+  ],
+  "blocks": [
+    {
+      "type": "comparison_product_new",
+      "name": "Product",
+      "settings": [
+        {
+          "type": "product",
+          "id": "product",
+          "label": "Product"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Compare Loop Earplugs"
+    }
+  ]
+}
+{% endschema %}
+
+<style>
+  .slider-main-{{section.id}}{
+      display:grid;
+      grid-template-columns: repeat({{section.settings.column_number}}, 1fr);
+      margin: 32px 0;
+  }
+
+  .header-{{section.id}}{
+    display:grid;
+    grid-template-columns: repeat({{section.settings.column_number}}, 1fr);
+    position: sticky;
+    top: -1px;
+    z-index: 1000;
+    background-color:#FFFFFF;
+  }
+
+  {% for block in section.blocks %}
+
+  .header-{{section.id}} div{
+    display:flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .product-{{block.id}} .product-title, .product-{{block.id}} .product-price,.product-{{block.id}} .product-link{
+    font-family: "Avantt";
+    font-weight: 400;
+    font-size: 32px;
+    line-height: 31px;
+    letter-spacing: -0.03em;
+    margin: 20px 0;
+    color:#252427;
+  }
+
+  .product-{{block.id}} .product-title, .product-{{block.id}} .product-link{
+    font-weight: 600;,
+  }
+
+  .product-{{block.id}} .product-link{
+    color:#4E26B8;
+    text-decoration:none;
+  }
+
+  .product-slider-{{block.id}}{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items:center;
+  }
+
+  .product-variant-color{
+    width: calc(var(--widthA) - 37px);
+    display: flex;
+    flex-wrap: wrap;
+    gap:11px;
+  }
+
+  .product-variant-color label{
+    display: block;
+    height: 24px;
+    width: 24px;
+    border-radius:50%;
+    cursor:pointer;
+    position: relative;
+  }
+
+  .v-swatch:before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    border: 3px solid;
+    border-color: #fff;
+    border-radius: 50%;
+    box-shadow: inset 0 0 1px 1px #00000026;}
+
+  .product-variant-color label.active{
+    box-shadow: 0 0 0 2px #000;
+  }
+  .product-variant-color input{
+    clip: rect(0,0,0,0);
+    overflow: hidden;
+    position: absolute;
+    height: 1px;
+    width: 1px;
+  }
+
+  .slider-component-{{block.id}}{
+    display: flex;
+    list-style: none;
+    width:248px;
+    overflow-x:hidden;
+    padding:0;
+  }
+
+  .slide-image{
+    display: block;
+  }
+  .slide-image.display_hide{
+    display: none;
+  }
+
+  .slide-component-{{block.id}} img{
+    width:248px;
+    height:248px;
+  }
+
+  {%endfor%}
+</style>
+
+<script>
+  document.querySelector('[data-ref="slider-main-component"]').addEventListener('click', (e) => {
+    console.log(e.target);
+    if (e.target.value) {
+      console.log(e.target.parentElement);
+      e.target.parentElement.querySelectorAll('label').forEach((elm) => elm.classList.remove('active'));
+      e.target.parentElement.querySelector(`[for="${e.target.getAttribute('id')}"]`).classList.add('active');
+
+      let selectedSliderParent = e.target.parentElement.previousElementSibling;
+      selectedSliderParent.querySelectorAll('.slide-image').forEach((elm) => elm.classList.add('display_hide'));
+
+      selectedSliderParent.querySelector(`[alt="${e.target.value}"]`).parentElement.classList.remove('display_hide');
+    }
+  });
+</script>
