@@ -1,4 +1,4 @@
-<section class="comparison-loop-{{section.id}}">
+<section class="comparison-loop-{{ section.id }}">
   <header class="header-{{section.id}}">
     {% for block in section.blocks %}
       <div class="product-{{block.id}}">
@@ -10,51 +10,396 @@
   </header>
   <main class="slider-main-{{section.id}}" data-ref="slider-main-component">
     {% for block in section.blocks %}
-      <div class="product-slider-{{block.id}}">
-        <div class="product-slider-color">
-          <ul class="slider-component-{{block.id}}">
-            {% for variant in block.settings.product.variants %}
-              <li class="slide-component-{{block.id}} slide-image">
-                <img src="{{ variant.featured_image | img_url: 'master'}}" alt="{{ variant.title }}">
-              </li>
-            {% endfor %}
-          </ul>
-        </div>
-        <div
-          class="product-variant-color"
-          style="--widthA : calc(24 * {{ block.settings.product.variants | size}}px);"
-        >
-          {%- for option in block.settings.product.options_with_values -%}
-            {%- for value in option.values -%}
-              <input
-                type="radio"
-                id="{{ section.id }}-{{ option.position }}-{{ forloop.index0 }}-{{ block.settings.product.title}}"
-                name="{{ option.name }}"
-                value="{{ value | escape }}"
-                form="{{ product_form_id }}"
-                {% if option.selected_value == value %}
-                  checked
-                {% endif %}
-              >
-              {% assign value_slug = value | downcase | replace: ' ', '-' %}
-              {% if shop.metaobjects.color_swatches[value_slug] %}
-                <label
-                  for="{{ section.id }}-{{ option.position }}-{{ forloop.index0 }}-{{ block.settings.product.title}}"
-                  class="v-swatch"
-                  style="background-image: url({{ shop.metaobjects.color_swatches[value_slug].image | img_url: '50x' }}); background-color: {{ shop.metaobjects.color_swatches[value_slug].color }};"
+      <div class="silder-{{ block.settings.product.title }}-main">
+        <div class="product-slider-{{block.id}}">
+          <div class="product-slider-color">
+            <ul class="slider-component-{{block.id}}">
+              {% for variant in block.settings.product.variants %}
+                <li class="slide-component-{{block.id}} slide-image">
+                  <img src="{{ variant.featured_image | img_url: 'master'}}" alt="{{ variant.title }}">
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+          <div
+            class="product-variant-color"
+            style="--widthA : calc(24 * {{ block.settings.product.variants | size}}px);"
+          >
+            {%- for option in block.settings.product.options_with_values -%}
+              {%- for value in option.values -%}
+                <input
+                  type="radio"
+                  id="{{ section.id }}-{{ option.position }}-{{ forloop.index0 }}-{{ block.settings.product.title}}"
+                  name="{{ option.name }}"
+                  value="{{ value | escape }}"
+                  form="{{ product_form_id }}"
+                  {% if option.selected_value == value %}
+                    checked
+                  {% endif %}
                 >
-                </label>
-              {% else %}
-                <label for="{{ section.id }}-{{ option.position }}-{{ forloop.index0 }}">
-                  {{ value }}
-                </label>
-              {% endif %}
+                {% assign value_slug = value | downcase | replace: ' ', '-' %}
+                {% if shop.metaobjects.color_swatches[value_slug] %}
+                  <label
+                    for="{{ section.id }}-{{ option.position }}-{{ forloop.index0 }}-{{ block.settings.product.title}}"
+                    class="v-swatch"
+                    style="background-image: url({{ shop.metaobjects.color_swatches[value_slug].image | img_url: '50x' }}); background-color: {{ shop.metaobjects.color_swatches[value_slug].color }};"
+                  >
+                  </label>
+                {% else %}
+                  <label for="{{ section.id }}-{{ option.position }}-{{ forloop.index0 }}">
+                    {{ value }}
+                  </label>
+                {% endif %}
+              {%- endfor -%}
             {%- endfor -%}
-          {%- endfor -%}
+          </div>
+          <div class="product_price_main">
+            <p class="product-price">€{{ block.settings.product.price | times: 0.01 }}</p>
+          </div>
+
+          <div class="product_buy_now_button">
+            {%- form 'product',
+              block.settings.product,
+              id: product_form_id,
+              class: 'form',
+              novalidate: 'novalidate',
+              data-type: 'add-to-cart-form'
+            -%}
+              <div class="continue-selling-msg">
+                {%- if block.settings.product.selected_or_first_available_variant.inventory_policy == 'continue'
+                  and block.settings.product.selected_or_first_available_variant.inventory_quantity <= 0
+                -%}
+                  <p style="padding: 16px; background: rgb(248,206,196);">
+                    <b>Note: </b>Loop Engage is literally flying off the shelves and we're struggling to keep up! We'll
+                    have your order shipped within 7 working days.
+                  </p>
+                {%- endif -%}
+              </div>
+              <input
+                type="hidden"
+                name="id"
+                value="{{ block.settings.product.selected_or_first_available_variant.id }}"
+                disabled
+              >
+              <div class="product-form__buttons">
+                {% if block.settings.product.selected_or_first_available_variant.available == false %}
+                  {% comment %} <button id="BIS_trigger" type="button" class="button--primary button button--full-width">Sold out - Email when available</button> {% endcomment %}
+                {% endif %}
+                {% render 'loop-sticky-atc', product: block.settings.product %}
+                <button
+                  type="submit"
+                  name="add"
+                  class="product-form__submit button button--full-width {% if block.settings.show_dynamic_checkout and block.settings.product.selling_plan_groups == empty %}button--secondary{% else %}button--primary{% endif %}"
+                  {% if block.settings.product.selected_or_first_available_variant.available == false %}
+                    data-oos="1"
+                  {% else %}
+                    data-oos="0"
+                  {% endif %}
+                  disabled
+                >
+                  <span>
+                    {%- if block.settings.product.selected_or_first_available_variant.available -%}
+                      Buy Now
+                    {%- else -%}
+                      {{ 'products.product.sold_out' | t }}
+                    {%- endif -%}
+                  </span>
+                  <div class="loading-overlay__spinner hidden">
+                    <svg
+                      aria-hidden="true"
+                      focusable="false"
+                      role="presentation"
+                      class="spinner"
+                      viewBox="0 0 66 66"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <circle class="path" fill="none" stroke-width="6" cx="33" cy="33" r="30"></circle>
+                    </svg>
+                  </div>
+                </button>
+                {%- if block.settings.show_dynamic_checkout -%}
+                  {{ form | payment_button }}
+                {%- endif -%}
+              </div>
+            {%- endform -%}
+          </div>
+
+          <div class="product-returns-{{ block.id }}">{{ block.settings.product_returns_text }}</div>
+
+          <div class="product-page-{{ block.id }}">
+            <a class="product-link" href="{{ block.settings.product.url }}">Learn More →</a>
+          </div>
+
+          <div class="product-description-{{ block.id }}">
+            <div class="product-title">{{ block.settings.product_description_title }}</div>
+            <div class="product-desc">{{ block.settings.product_description_description }}</div>
+          </div>
         </div>
       </div>
     {% endfor %}
   </main>
+
+  <div class="product-best-used">
+    <p class="title">Best Used</p>
+    <div class="best-used-details">
+      {% for block in section.blocks %}
+        <div class="best-used-location-{{ block.id }}">
+          <p>{{ block.settings['best-used-title'] }}</p>
+          <div class="best-used-location-svg">
+            <img
+              src="{{ block.settings.image_best_used | img_url }}"
+              alt="{{ bock.settings.product.title }} Used Location"
+            >
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="product-perfect-for">
+    <p class="title">Perfect For</p>
+    <div class="perfect-for-details">
+      {% for block in section.blocks %}
+        <div class="perfect-for-location-{{ block.id }}">
+          <div class="perfect-for-location-one">
+            <div class="perfect-for-location-svg">
+              <img
+                src="{{ block.settings.image_perfect_for_one |img_url }}"
+                alt="{{ bock.settings.product.title }} Perfect Location "
+              >
+            </div>
+            <p>{{ block.settings['perfect-for-title_one'] }}</p>
+          </div>
+          <div class="perfect-for-location-two">
+            <div class="perfect-for-location-svg">
+              <img
+                src="{{ block.settings.image_perfect_for_two |img_url }}"
+                alt="{{ bock.settings.product.title }} Perfect Location "
+              >
+            </div>
+            <p>{{ block.settings['perfect-for-title_two'] }}</p>
+          </div>
+          <div class="perfect-for-location-three">
+            <div class="perfect-for-location-svg">
+              <img
+                src="{{ block.settings.image_perfect_for_three |img_url }}"
+                alt="{{ bock.settings.product.title }} Perfect Location "
+              >
+            </div>
+            <p>{{ block.settings['perfect-for-title_three'] }}</p>
+          </div>
+          <div class="perfect-for-location-four">
+            <div class="perfect-for-location-svg">
+              <img
+                src="{{ block.settings.image_perfect_for_four |img_url }}"
+                alt="{{ bock.settings.product.title }} Perfect Location "
+              >
+            </div>
+            <p>{{ block.settings['perfect-for-title_four'] }}</p>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="product-noise-reduction">
+    <p class="title">Noise Reduction</p>
+    <div class="noise-reduction-details">
+      {% for block in section.blocks %}
+        <div class="noise-reduction-location-{{ block.id }}">
+          up to
+          <p class="noise_decibel">{{ block.settings['noise-reduction-details'] }}</p>
+          noise reduction
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="product-filter-for">
+    <p class="title">Filter fine-tuned for</p>
+    <div class="filter-for-details">
+      {% for block in section.blocks %}
+        <div class="filter-for-location-{{ block.id }}">
+          {{ block.settings['filter-for-details'] }}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="product-certified-hearing">
+    <p class="title">Certified Hearing Protection</p>
+    <div class="certified-hearing-details">
+      {% for block in section.blocks %}
+        <div class="certified-hearing-checkbox-{{ block.id }}">
+          {% if block.settings.certified_hearing_protection %}
+            <div class="true">
+              <svg width="22" height="15" viewBox="0 0 22 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20.2998 1.30629L9.16344 13.6751L1.45458 5.70044" stroke="white" stroke-width="2.12658" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          {% else %}
+            <div class="false">
+              <svg width="13" height="14" viewBox="0 0 13 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0.901367 1.57188L11.8818 12.5523" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M11.8818 1.57188L0.901443 12.5523" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="product-reusability">
+    <p class="title">Reusable & Sustainable</p>
+    <div class="reusability">
+      {% for block in section.blocks %}
+        <div class="reusability-{{ block.id }}">
+          {% if block.settings.reusability %}
+            <div class="true">
+              <svg width="22" height="15" viewBox="0 0 22 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20.2998 1.30629L9.16344 13.6751L1.45458 5.70044" stroke="white" stroke-width="2.12658" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          {% else %}
+            <div class="false">
+              <svg width="13" height="14" viewBox="0 0 13 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0.901367 1.57188L11.8818 12.5523" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M11.8818 1.57188L0.901443 12.5523" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="product-size-ear-tip">
+    <p class="title">Adjustable ear tip sizes</p>
+    <div class="size-ear-tip">
+      {% for block in section.blocks %}
+        <div class="size-ear-tip-{{ block.id }}">
+          {% if block.settings['size-ear-tip'] %}
+            <div class="true">
+              <svg width="22" height="15" viewBox="0 0 22 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20.2998 1.30629L9.16344 13.6751L1.45458 5.70044" stroke="white" stroke-width="2.12658" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          {% else %}
+            <div class="false">
+              <svg width="13" height="14" viewBox="0 0 13 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0.901367 1.57188L11.8818 12.5523" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M11.8818 1.57188L0.901443 12.5523" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="product-carry-case">
+    <p class="title">Reusable & Sustainable</p>
+    <div class="carry-case">
+      {% for block in section.blocks %}
+        <div class="carry-case-{{ block.id }}">
+          {% if block.settings['carry-case'] %}
+            <div class="true">
+              <svg width="22" height="15" viewBox="0 0 22 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20.2998 1.30629L9.16344 13.6751L1.45458 5.70044" stroke="white" stroke-width="2.12658" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          {% else %}
+            <div class="false">
+              <svg width="13" height="14" viewBox="0 0 13 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0.901367 1.57188L11.8818 12.5523" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M11.8818 1.57188L0.901443 12.5523" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="product-washable">
+    <p class="title">Fully washable</p>
+    <div class="washable">
+      {% for block in section.blocks %}
+        <div class="washable-{{ block.id }}">
+          {% if block.settings.washable %}
+            <div class="true">
+              <svg width="22" height="15" viewBox="0 0 22 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20.2998 1.30629L9.16344 13.6751L1.45458 5.70044" stroke="white" stroke-width="2.12658" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          {% else %}
+            <div class="false">
+              <svg width="13" height="14" viewBox="0 0 13 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0.901367 1.57188L11.8818 12.5523" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M11.8818 1.57188L0.901443 12.5523" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="product-noise-reduction-rating">
+    <p class="title">Noise Reduction Rating (NRR)</p>
+    <div class="noise-reduction-rating">
+      {% for block in section.blocks %}
+        <div class="noise-reduction-rating-{{ block.id }}">
+          <p class="noise_decibel">{{ block.settings['noise-reduction-rating'] }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="product-free-returns">
+    <p class="title">100-day free returns</p>
+    <div class="free-returns">
+      {% for block in section.blocks %}
+        <div class="free-returns-{{ block.id}}">
+          {% if block.settings['free-returns'] %}
+            <div class="true">
+              <svg width="22" height="15" viewBox="0 0 22 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20.2998 1.30629L9.16344 13.6751L1.45458 5.70044" stroke="white" stroke-width="2.12658" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          {% else %}
+            <div class="false">
+              <svg width="13" height="14" viewBox="0 0 13 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0.901367 1.57188L11.8818 12.5523" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M11.8818 1.57188L0.901443 12.5523" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="product-loop-mute">
+    <p class="title">Loop Mute</p>
+    <p class="details">{{ section.settings['loop-mute-details'] }}</p>
+  </div>
+
+  <div class="product-plus">
+    {% for block in section.blocks %}
+      <div class="{{ block.settings.product.title | downcase }}-plus-avaiable">
+        <img src="{{ block.settings.plus_image | img_url}}">
+        {% if block.settings.product_plus_link %}
+          <p class="product-plus-with-link">
+            With <a href="{{ block.settings.product-plus-link }}">{{ block.settings['product-plus-link'] }}</a>
+          </p>
+        {% else %}
+          <p class="product-plus-with-link">N/A</p>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
 </section>
 
 {% schema %}
@@ -72,6 +417,12 @@
       "unit": "col",
       "label": "Number of Columns",
       "default": 3
+    },
+    {
+      "type": "text",
+      "id": "loop-mute-details",
+      "label": "Loop Mute Details",
+      "default": "Enjoy even more control over your volume with Loop Mute accessory. Simply plug in to your Loops for extra 5 dB of noise reduction on demand."
     }
   ],
   "blocks": [
@@ -83,6 +434,155 @@
           "type": "product",
           "id": "product",
           "label": "Product"
+        },
+        {
+          "type": "text",
+          "id": "product_returns_text",
+          "label": "Product Returns Text",
+          "default": "100-day free returns"
+        },
+        {
+          "type": "text",
+          "id": "product_description_title",
+          "label": "Product Description Title",
+          "default": "Tune out"
+        },
+        {
+          "type": "text",
+          "id": "product_description_description",
+          "label": "Product Description",
+          "default": "Reduce maximum noise and get in your bubble"
+        },
+        {
+          "type": "text",
+          "id": "best-used-title",
+          "label": "Best Used Location",
+          "default": "Alone"
+        },
+        {
+          "type": "image_picker",
+          "id": "image_best_used",
+          "label": "Best Used Location Image"
+        },
+        {
+          "type": "image_picker",
+          "id": "image_perfect_for_one",
+          "label": "Perfect For Location Image One"
+        },
+        {
+          "type": "text",
+          "id": "perfect-for-title_one",
+          "label": "Perfect For Location Text One",
+          "default": "Noise Sensitivity"
+        },
+        {
+          "type": "image_picker",
+          "id": "image_perfect_for_two",
+          "label": "Perfect For Location Image two"
+        },
+        {
+          "type": "text",
+          "id": "perfect-for-title_two",
+          "label": "Perfect For Location Text two",
+          "default": "Sleep"
+        },
+        {
+          "type": "image_picker",
+          "id": "image_perfect_for_three",
+          "label": "Perfect For Location Image three"
+        },
+        {
+          "type": "text",
+          "id": "perfect-for-title_three",
+          "label": "Perfect For Location Text three",
+          "default": "Focus"
+        },
+        {
+          "type": "image_picker",
+          "id": "image_perfect_for_four",
+          "label": "Perfect For Location Image four"
+        },
+        {
+          "type": "text",
+          "id": "perfect-for-title_four",
+          "label": "Perfect For Location Text four",
+          "default": "Travel"
+        },
+        {
+          "type": "text",
+          "id": "noise-reduction-details",
+          "label": "Noise Reduction Details",
+          "default": "-27db"
+        },
+        {
+          "type": "richtext",
+          "id": "filter-for-details",
+          "label": "Filter Details",
+          "default": "<p>—</p>"
+        },
+        {
+          "type": "checkbox",
+          "id": "certified_hearing_protection",
+          "label": "Certified Hearing Protection",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "reusability",
+          "label": "Reusable & Sustainable",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "size-ear-tip",
+          "label": "Adjustable ear tip sizes",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "carry-case",
+          "label": "Portable Carry Case",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "washable",
+          "label": "Fully washable",
+          "default": true
+        },
+        {
+          "type": "text",
+          "id": "noise-reduction-rating",
+          "label": "Noise Reduction Rating",
+          "default": "14 db"
+        },
+        {
+          "type": "checkbox",
+          "id": "free-returns",
+          "label": "100-day free returns",
+          "default": true
+        },
+        {
+          "type": "image_picker",
+          "id": "plus_image",
+          "label": "Plus Product Image"
+        },
+        {
+          "type": "checkbox",
+          "id": "product_plus_link",
+          "label": "Prodcut Plus Avaiable",
+          "default": false
+        },
+        {
+          "type": "text",
+          "id": "product-plus-link",
+          "label": "Product Plus Title",
+          "default": "Loop Engage Plus"
+        },
+        {
+          "type": "url",
+          "id": "product-plus-link",
+          "label": "Button link"
         }
       ]
     }
@@ -96,20 +596,42 @@
 {% endschema %}
 
 <style>
-  .slider-main-{{section.id}}{
+  .slider-main-{{ section.id }}, .best-used-details, .perfect-for-details, .noise-reduction-details, .filter-for-details, .certified-hearing-details,.reusability,.carry-case,.size-ear-tip,.washable,.noise-reduction-rating, .free-returns, .product-plus{
       display:grid;
-      grid-template-columns: repeat({{section.settings.column_number}}, 1fr);
+      grid-template-columns: repeat({{ section.settings.column_number }}, 1fr);
       margin: 32px 0;
   }
 
-  .header-{{section.id}}{
+
+  .header-{{ section.id }}{
     display:grid;
     grid-template-columns: repeat({{section.settings.column_number}}, 1fr);
     position: sticky;
     top: -1px;
     z-index: 1000;
     background-color:#FFFFFF;
+    border-bottom: 1.5px solid rgba(0, 0, 0, 0.1);
   }
+
+
+  .comparison-loop-{{ section.id }} .title{
+    font-family: "Avantt";
+    font-weight: 400;
+    font-size: 32px;
+    line-height: 31px;
+    letter-spacing: -0.03em;
+    color:#252427;
+    padding: 20px 20px 20px 65px;
+    width:100%;
+    background-color:#EFEFEF;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .product-loop-mute{
+    border-bottom: 1.5px solid rgba(0, 0, 0, 0.1);
+  }
+
 
   {% for block in section.blocks %}
 
@@ -120,18 +642,19 @@
     align-items: center;
   }
 
-  .product-{{block.id}} .product-title, .product-{{block.id}} .product-price,.product-{{block.id}} .product-link{
+  .product-{{block.id}} .product-title, .product-{{block.id}} .product-price,.product-{{block.id}} .product-link, .product_price_main .product-price, .product-description-{{ block.id }} .product-title, .noise-reduction-location-{{ block.id }} .noise_decibel, .noise-reduction-rating-{{ block.id }} .noise_decibel{
     font-family: "Avantt";
     font-weight: 400;
     font-size: 32px;
     line-height: 31px;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.03em !important;
     margin: 20px 0;
     color:#252427;
   }
 
-  .product-{{block.id}} .product-title, .product-{{block.id}} .product-link{
-    font-weight: 600;,
+
+  .product-{{block.id}} .product-title, .product-{{block.id}} .product-link, .product_price_main .product-price,.product-description-{{ block.id }} .product-title, .noise-reduction-location-{{ block.id }} .noise_decibel, .noise-reduction-rating-{{ block.id }} .noise_decibel{
+    font-weight: 600;
   }
 
   .product-{{block.id}} .product-link{
@@ -139,11 +662,18 @@
     text-decoration:none;
   }
 
+  .silder-{{ block.settings.product.title }}-main{
+    display:flex;
+    justify-content: center;
+    align-items: center;
+  }
+
   .product-slider-{{block.id}}{
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items:center;
+    max-width:420px;
   }
 
   .product-variant-color{
@@ -206,7 +736,93 @@
     height:248px;
   }
 
-  {%endfor%}
+  .product-returns-{{block.id}}, .product-page-{{ block.id }} a, .product-description-{{ block.id }} .product-desc, .best-used-location-{{ block.id }} p, .perfect-for-location-{{ block.id }} p, .noise-reduction-location-{{ block.id }} p, .filter-for-details p, .product-loop-mute .details{
+    font-family: "Avantt";
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 26px;
+    letter-spacing: -0.02em;
+    margin: 20px 0;
+    color:#757470;
+  }
+
+  .product-loop-mute .details{
+    color:#252427;
+    max-width: 680px;
+    padding: 20px 0 20px 65px;
+  }
+
+  .best-used-location-{{ block.id }} p{
+    color:#252427;
+    font-weight: 600;
+  }
+
+  .product-page-{{ block.id }} a{
+    color: #4E26B8;
+    text-decoration:none;
+  }
+
+  .product-description-{{ block.id }}, .noise-reduction-details .noise-reduction-location-{{ block.id }}, .filter-for-details p{
+    text-align: center;
+  }
+
+  .product-description-{{ block.id }} .product-desc{
+    max-width: 223px;
+    width:100%;
+  }
+
+  .best-used-details .best-used-location-{{ block.id }}, .perfect-for-location-{{ block.id }}, .perfect-for-location-one, .perfect-for-location-two, .perfect-for-location-three,.perfect-for-location-four{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .perfect-for-location-{{ block.id }}{
+    gap:50px;
+  }
+  .perfect-for-location-{{ block.id }} p, .filter-for-details p, .noise-reduction-rating .noise_decibel{
+    margin: 0;
+  }
+  .noise-reduction-location-{{ block.id }} .noise_decibel{
+    margin: 10px 0;
+  }
+
+  .certified-hearing-checkbox-{{ block.id }},.reusability-{{ block.id }},.carry-case-{{ block.id }},.size-ear-tip-{{ block.id }}, .washable-{{block.id}}, .noise-reduction-rating-{{ block.id }}, .free-returns-{{ block.id}}{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .certified-hearing-checkbox-{{ block.id }} div,.reusability-{{ block.id }} div, .carry-case-{{ block.id }} div,.size-ear-tip-{{ block.id }} div, .washable-{{ block.id}} div, .free-returns-{{ block.id }} div{
+    width:42px;
+    height:42px;
+    border-radius: 50%;
+     display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+    .certified-hearing-checkbox-{{ block.id }} .true,.reusability-{{ block.id }} .true, .carry-case-{{ block.id }} .true, .size-ear-tip-{{ block.id }} .true,.washable-{{ block.id }} .true, .free-returns .true{
+      background-color: #4E26B8;
+    }
+
+    .certified-hearing-checkbox-{{ block.id }} .false,
+    .reusability-{{ block.id }} .false,
+    .carry-case-{{ block.id }} .false,
+    .size-ear-tip-{{ block.id }} .false,
+    .washable-{{ block.id }} .false,.free-returns .false{
+      background-color: #BCBAB8;
+    }
+
+    .{{ block.settings.product.title | downcase }}-plus-avaiable{
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+  {% endfor %}
 </style>
 
 <script>
