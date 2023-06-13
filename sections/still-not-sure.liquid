@@ -1,9 +1,27 @@
 <section class="still-not-sure-{{ section.id }}">
   <div class="still_not_sure_image_one">
-    <img src="{{ section.settings.still_not_image_one | img_url: 'master' }}" alt="Still Not Sure">
+    <img
+      class="desktop"
+      src="{{ section.settings.still_not_image_one_desktop | img_url: 'master' }}"
+      alt="Still Not Sure"
+    >
+    <img
+      class="mobile"
+      src="{{ section.settings.still_not_image_one_mobile | img_url: 'master' }}"
+      alt="Still Not Sure"
+    >
   </div>
   <div class="still_not_sure_image_two">
-    <img src="{{ section.settings.still_not_image_two | img_url: 'master' }}" alt="Still Not Sure">
+    <img
+      class="desktop"
+      src="{{ section.settings.still_not_image_two_desktop | img_url: 'master' }}"
+      alt="Still Not Sure"
+    >
+    <img
+      class="mobile"
+      src="{{ section.settings.still_not_image_two_mobile | img_url: 'master' }}"
+      alt="Still Not Sure"
+    >
   </div>
   <div class="still_not_sure_text">
     <p>{{ section.settings.still_not_sure_text }}</p>
@@ -19,13 +37,23 @@
   "settings": [
     {
       "type": "image_picker",
-      "id": "still_not_image_one",
-      "label": "Left Side Image"
+      "id": "still_not_image_one_desktop",
+      "label": "Left Side Image Desktop"
     },
     {
       "type": "image_picker",
-      "id": "still_not_image_two",
-      "label": "Right Side Image"
+      "id": "still_not_image_one_mobile",
+      "label": "Left Side Image Mobile"
+    },
+    {
+      "type": "image_picker",
+      "id": "still_not_image_two_desktop",
+      "label": "Right Side Image Desktop"
+    },
+    {
+      "type": "image_picker",
+      "id": "still_not_image_two_mobile",
+      "label": "Right Side Image Mobile"
     },
     {
       "type": "text",
@@ -56,7 +84,7 @@
 <style>
   .still-not-sure-{{ section.id }}{
     position:relative;
-    min-height:401px;
+    height:401px;
     background-color:#BCBAB8;
   }
 
@@ -64,13 +92,18 @@
     position:absolute;
     top:0;
     left:0;
-    height:100%;
   }
   .still-not-sure-{{ section.id }} .still_not_sure_image_two{
     position:absolute;
-    top:0;
+    bottom:0;
     right:0;
-    height:100%;
+  }
+
+  .still-not-sure-{{ section.id }} .still_not_sure_image_one .desktop,.still-not-sure-{{ section.id }} .still_not_sure_image_two .desktop{
+    display: block;
+  }
+  .still-not-sure-{{ section.id }} .still_not_sure_image_one .mobile,.still-not-sure-{{ section.id }} .still_not_sure_image_two .mobile{
+    display: none;
   }
 
   .still-not-sure-{{ section.id }} .still_not_sure_text{
@@ -79,6 +112,8 @@
     justify-content:center;
     align-items:center;
     padding: 103px 0;
+    position: relative;
+    z-index: 99;
   }
 
   .still-not-sure-{{ section.id }} .still_not_sure_text p{
@@ -105,5 +140,19 @@
     border: 1px solid #6243B9;
     border-radius:40px;
     text-decoration:none;
+  }
+
+  @media screen and (max-width: 749px) {
+
+  .still-not-sure-{{ section.id }}{
+    height:365px;
+  }
+
+  .still-not-sure-{{ section.id }} .still_not_sure_image_one .desktop,.still-not-sure-{{ section.id }} .still_not_sure_image_two .desktop{
+    display: none;
+  }
+  .still-not-sure-{{ section.id }} .still_not_sure_image_one .mobile,.still-not-sure-{{ section.id }} .still_not_sure_image_two .mobile{
+    display: block;
+  }
   }
 </style>
