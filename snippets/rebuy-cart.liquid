@@ -405,7 +405,8 @@
         </div>
       </div>
 
-      <div v-if="progressBarEnabled()" class="rebuy-cart__progress-bar-container below">
+      <div v-if="progressBarEnabled()" class="rebuy-cart__progress-bar-container below echologyx">
+
         <div class="rebuy-cart__progress-free-products" v-for="bar in settings.progress_bar.bars" v-if="isValidBar(bar) && getBarLayout(bar) == 'below' && earnedProducts(bar).length > 0">
           <div class="rebuy-cart__progress-free-products-title">Free Gifts</div>
           <div class="rebuy-cart__progress-free-products-list" ref="freeProductList">
